@@ -1,0 +1,29 @@
+const session = db.getMongo().startSession();
+const flightDb = session.getDatabase("AirlineDB");
+
+try {
+    session.startTransaction();
+
+    const seatUpdate = flightDb.seats.updateOne(
+        { flightId: "AI-202", seatNo: "12A", status: "AVAILABLE" },
+        { $set: { status: "BOOKED" } }
+    );
+    if (seatUpdate.modifiedCount === 0) {
+        throw new Error("Seat 12A is unavailable.");
+    }
+
+    flightDb.bookings.insertOne({
+        flightId: "AI-202",
+        seatNo: "12A",
+        passenger: "Ananya Nair",
+        fare: 8500,
+        bookedAt: new Date()
+    });
+
+    session.commitTransaction();
+} catch (err) {
+    session.abortTransaction();
+    print("Booking failed: " + err.message);
+} finally {
+    session.endSession();
+}

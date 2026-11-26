@@ -1,0 +1,23 @@
+const pipeline = [
+  {
+    $match: {
+      operationType: "update",
+      "updateDescription.updatedFields.sellingPrice": { $exists: true }
+    }
+  }
+];
+
+const changeStream = db.products.watch(pipeline, { fullDocument: "updateLookup", fullDocumentBeforeChange: "whenAvailable" });
+
+print("Watching for product price changes...");
+while (!changeStream.isClosed()) {
+  if (changeStream.hasNext()) {
+    const change = changeStream.next();
+    printjson({
+      productId: change.documentKey._id,
+      oldPrice: change.fullDocumentBeforeChange?.sellingPrice,
+      newPrice: change.updateDescription.updatedFields.sellingPrice,
+      timestamp: change.wallTime
+    });
+  }
+}

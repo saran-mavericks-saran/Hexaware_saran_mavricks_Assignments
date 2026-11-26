@@ -1,0 +1,24 @@
+db.createView(
+  "vw_unread_notifications_per_subscriber",
+  "notification_log",
+  [
+    {
+      $match: { isRead: false }
+    },
+    {
+      $group: {
+        _id: "$subscriberId",
+        unreadCount: { $sum: 1 },
+        latestAlert: { $max: "$createdAt" }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        subscriberId: "$_id",
+        unreadCount: 1,
+        latestAlert: 1
+      }
+    }
+  ]
+);

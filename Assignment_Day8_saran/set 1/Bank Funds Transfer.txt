@@ -1,0 +1,41 @@
+const session = db.getMongo().startSession();
+const accounts = session.getDatabase("BankPracticeDB").accounts;
+const txns = session.getDatabase("BankPracticeDB").transactions;
+
+try {
+    session.startTransaction({
+        readConcern: { level: "snapshot" },
+        writeConcern: { w: "majority" }
+    });
+
+    const amount = 500;
+    const sender = accounts.findOne({ _id: 101, status: "ACTIVE" });
+    if (!sender || sender.balance < amount) {
+        throw new Error("Insufficient funds or inactive sender account.");
+    }
+
+    accounts.updateOne({ _id: 101 }, { $inc: { balance: -amount } });
+
+    const creditRes = accounts.updateOne(
+        { _id: 102, status: "ACTIVE" },
+        { $inc: { balance: amount } }
+    );
+    if (creditRes.matchedCount === 0) {
+        throw new Error("Receiver account not found or inactive.");
+    }
+
+    txns.insertOne({
+        fromAccount: 101,
+        toAccount: 102,
+        amount: amount,
+        date: new Date()
+    });
+
+    session.commitTransaction();
+    print("MongoDB multi-document transfer committed.");
+} catch (error) {
+    session.abortTransaction();
+    print("Transaction aborted and rolled back: " + error.message);
+} finally {
+    session.endSession();
+}

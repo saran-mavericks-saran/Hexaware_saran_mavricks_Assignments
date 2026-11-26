@@ -1,0 +1,21 @@
+db.createView(
+  "vw_unresolved_complaints",
+  "customer_communications",
+  [
+    {
+      $match: {
+        type: "Complaint",
+        status: { $ne: "Resolved" }
+      }
+    },
+    {
+      $project: {
+        customerId: 1,
+        policyNumber: 1,
+        subject: 1,
+        status: 1,
+        createdAt: 1
+      }
+    }
+  ]
+);

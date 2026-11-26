@@ -1,0 +1,11 @@
+const qtyOrdered = 3;
+const result = db.products.updateOne(
+    { _id: "PROD-101", stockQty: { $gte: qtyOrdered } },
+    { $inc: { stockQty: -qtyOrdered } }
+);
+
+if (result.modifiedCount === 1) {
+    print("Stock reserved atomically.");
+} else {
+    print("Insufficient stock—update rejected.");
+}

@@ -1,0 +1,21 @@
+db.createView(
+  "vw_order_status_counts",
+  "orders",
+  [
+    {
+      $group: {
+        _id: "$status",
+        totalOrders: { $sum: 1 },
+        totalRevenue: { $sum: "$totalAmount" }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        status: "$_id",
+        totalOrders: 1,
+        totalRevenue: 1
+      }
+    }
+  ]
+);

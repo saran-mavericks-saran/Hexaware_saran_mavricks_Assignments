@@ -1,0 +1,12 @@
+const alertStream = db.fraud_alerts.watch([
+  { $match: { operationType: "insert" } }
+]);
+
+print("Listening for fraud alerts...");
+while (!alertStream.isClosed()) {
+  if (alertStream.hasNext()) {
+    const event = alertStream.next();
+    print("FRAUD ALERT DETECTED:");
+    printjson(event.fullDocument);
+  }
+}

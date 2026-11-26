@@ -1,0 +1,16 @@
+const wardStream = db.ward_alerts.watch([
+  {
+    $match: {
+      operationType: "insert",
+      "fullDocument.severity": "critical"
+    }
+  }
+]);
+
+print("Monitoring critical ward alerts...");
+while (!wardStream.isClosed()) {
+  if (wardStream.hasNext()) {
+    const alert = wardStream.next();
+    print(`CRITICAL ALERT | Ward: ${alert.fullDocument.wardName} | Time: ${alert.fullDocument.createdAt || alert.wallTime}`);
+  }
+}
